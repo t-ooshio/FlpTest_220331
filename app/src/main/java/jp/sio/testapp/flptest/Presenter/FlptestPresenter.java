@@ -20,9 +20,6 @@ import jp.sio.testapp.flptest.Activity.SettingActivity;
 import jp.sio.testapp.flptest.L;
 import jp.sio.testapp.flptest.R;
 import jp.sio.testapp.flptest.Service.FlpRequestLocationUpdates;
-import jp.sio.testapp.flptest.Service.FlpHighAccuracyService;
-import jp.sio.testapp.flptest.Service.FlpLowPowerService;
-import jp.sio.testapp.flptest.Service.FlpNoPowerService;
 import jp.sio.testapp.flptest.Service.FlpgetCurrentLocationService;
 import jp.sio.testapp.flptest.Usecase.FlptestUsecase;
 import jp.sio.testapp.flptest.Usecase.SettingUsecase ;
@@ -76,7 +73,7 @@ public class FlptestPresenter {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             activity.unbindService(runService);
-            flpgetCurrentLocationService = null;
+            flpRequestLocationUpdates = null;
         }
     };
 
@@ -133,44 +130,24 @@ public class FlptestPresenter {
                         + delassisttime + "," + isCold);
         locationLog.writeLog(locationHeader);
 
-        activity.showTextViewSetting("測位API:" + locationApi + "測位精度" + locationPriority + "\n" + "測位回数:" + count + "\n" + "タイムアウト:" + timeout + "\n" +
+        activity.showTextViewSetting("測位API:" + locationApi + "測位精度:" + locationPriority + "\n" + "測位回数:" + count + "\n" + "タイムアウト:" + timeout + "\n" +
                 "測位間隔:" + interval + "\n" + "Cold:" + isCold + "\n"
                 + "suplEndWaitTime:" + suplendwaittime + "\n" + "アシストデータ削除時間:" + delassisttime + "\n");
 
         if(locationApi.equals(activity.getResources().getString(R.string.api_requestLocationUpdates))) {
-            locationserviceIntent = new Intent(activity.getApplicationContext(), FlpgetCurrentLocationService.class);
-            setSetting(locationserviceIntent);
-            runService = serviceConnectionFlpRequestLocationUpdates;
-            filter = new IntentFilter(activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
-            L.d("FlpBalancedPowerAccuracyService");
-
-        }else if(locationPriority.equals(activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy))) {
             locationserviceIntent = new Intent(activity.getApplicationContext(), FlpRequestLocationUpdates.class);
             setSetting(locationserviceIntent);
-            runService = serviceConnectionFlpBalancedPowerAccuracy;
-            filter = new IntentFilter(activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
-            L.d("FlpBalancedPowerAccuracyService");
+            runService = serviceConnectionFlpRequestLocationUpdates;
+            filter = new IntentFilter(activity.getResources().getString(R.string.api_requestLocationUpdates));
+            L.d("api_requestLocationUpdatesService");
 
-        }else if(locationPriority.equals(activity.getResources().getString(R.string.locationFlpHighAccuracy))){
-            locationserviceIntent = new Intent(activity.getApplicationContext(), FlpHighAccuracyService.class);
+        }else if(locationApi.equals(activity.getResources().getString(R.string.api_getCurrentLocation))) {
+            locationserviceIntent = new Intent(activity.getApplicationContext(), FlpgetCurrentLocationService.class);
             setSetting(locationserviceIntent);
-            runService = serviceConnectionFlpHighAccuracy;
-            filter = new IntentFilter(activity.getResources().getString(R.string.locationFlpHighAccuracy));
-            L.d("FlpHighAccuracyService");
+            runService = serviceConnectionFlpGetCurrentLocarionService;
+            filter = new IntentFilter(activity.getResources().getString(R.string.api_getCurrentLocation));
+            L.d("api_getCurrentLocationService");
 
-        }else if(locationPriority.equals(activity.getResources().getString(R.string.locationFlpLowPower))){
-            locationserviceIntent = new Intent(activity.getApplicationContext(), FlpLowPowerService.class);
-            setSetting(locationserviceIntent);
-            runService = serviceConnectionFlpLowPower;
-            filter = new IntentFilter(activity.getResources().getString(R.string.locationFlpLowPower));
-            L.d("FlpLowPowerService");
-
-        }else if(locationPriority.equals(activity.getResources().getString(R.string.locationFlpNoPower))){
-            locationserviceIntent = new Intent(activity.getApplicationContext(), FlpNoPowerService.class);
-            setSetting(locationserviceIntent);
-            runService = serviceConnectionFlpNoPower;
-            filter = new IntentFilter(activity.getResources().getString(R.string.locationFlpNoPower));
-            L.d("FlpNoPowerService");
         }else{
             showToast("予期せぬ測位方式");
             L.d("予期せぬ測位方式");

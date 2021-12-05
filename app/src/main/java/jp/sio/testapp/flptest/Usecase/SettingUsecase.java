@@ -35,6 +35,7 @@ public class SettingUsecase {
         settingPref.setLocationAPi(locationApi);
     }
     public void setLocationPriority(String locationPriority){
+        L.d("locationPriority:"+locationPriority);
         settingPref.setLocationPriority(locationPriority);
     }
 

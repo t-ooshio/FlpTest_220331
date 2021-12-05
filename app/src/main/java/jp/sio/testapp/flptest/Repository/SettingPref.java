@@ -3,6 +3,8 @@ package jp.sio.testapp.flptest.Repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.google.android.gms.location.LocationRequest;
+
 import jp.sio.testapp.flptest.L;
 import jp.sio.testapp.flptest.R;
 
@@ -27,7 +29,7 @@ public class SettingPref {
     private final int defSuplEndWaitTime = 0;
     private final int defDelAssistDataTime = 3;
     private final String defLocationAPi = "requestLocationUpdates";
-    private final String defLocationPriority = "FlpBalancedPowerAccuracy";
+    private final String defLocationPriority = "BalancedPowerAccuracy";
     //SharedPreference名
     private String PREFNAME = "FlpTestSetting";
 

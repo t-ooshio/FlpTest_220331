@@ -448,7 +448,7 @@ public class FlpRequestLocationUpdates extends Service implements
      */
     protected void sendLocationBroadCast(Boolean fix, Location location, long locationStartTime, long locationStopTime) {
         L.d("sendLocation");
-        Intent broadcastIntent = new Intent(getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
+        Intent broadcastIntent = new Intent(getResources().getString(R.string.api_requestLocationUpdates));
         broadcastIntent.putExtra(getResources().getString(R.string.category), getResources().getString(R.string.categoryLocation));
         broadcastIntent.putExtra(getResources().getString(R.string.TagisFix), fix);
         broadcastIntent.putExtra(getResources().getString(R.string.TagLocation), location);
@@ -467,7 +467,7 @@ public class FlpRequestLocationUpdates extends Service implements
      * @param category
      */
     protected void sendColdBroadCast(String category){
-        Intent broadcastIntent = new Intent(getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
+        Intent broadcastIntent = new Intent(getResources().getString(R.string.api_requestLocationUpdates));
 
         if(category.equals(getResources().getString(R.string.categoryColdStart))){
             L.d("ColdStart");
@@ -483,7 +483,7 @@ public class FlpRequestLocationUpdates extends Service implements
      * Serviceを破棄することを通知するBroadcast
      */
     protected void sendServiceEndBroadCast(){
-        Intent broadcastIntent = new Intent(getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
+        Intent broadcastIntent = new Intent(getResources().getString(R.string.api_requestLocationUpdates));
         broadcastIntent.putExtra(getResources().getString(R.string.category),getResources().getString(R.string.categoryServiceEnd));
         sendBroadcast(broadcastIntent);
     }

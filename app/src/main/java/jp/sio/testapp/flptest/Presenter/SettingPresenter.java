@@ -2,6 +2,8 @@ package jp.sio.testapp.flptest.Presenter;
 
 import android.app.Activity;
 
+import com.google.android.gms.location.LocationRequest;
+
 import jp.sio.testapp.flptest.Activity.SettingActivity;
 import jp.sio.testapp.flptest.L;
 import jp.sio.testapp.flptest.R;
@@ -27,22 +29,28 @@ public class SettingPresenter {
     public void commitSetting(){
         String locationApi = activity.getResources().getString(R.string.api_requestLocationUpdates);
         if(activity.isRadioButtonRequestLocationUpdates()){
+            L.d("save requestLocationUpdates");
             locationApi = activity.getResources().getString(R.string.api_requestLocationUpdates);
         }else if(activity.isRadioButtonGetCurrentLocation()){
             locationApi = activity.getResources().getString(R.string.api_getCurrentLocation);
+            L.d("save getCurrentLocation");
+        }else{
+            L.d("not save locationAPI");
         }
+        settingusecase.setLocationApi(locationApi);
 
-        String locationTyep = activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy);
+        String locationPriority = activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy);
         if(activity.isRadioButtonFlpBalancedPower()){
-            locationTyep = activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy);
+            locationPriority = activity.getResources().getString(R.string.locationFlpBalancedPowerAccuracy);
         }else if(activity.isRadioButtonFlpHighAccuracy()) {
-            locationTyep = activity.getResources().getString(R.string.locationFlpHighAccuracy);
+            locationPriority = activity.getResources().getString(R.string.locationFlpHighAccuracy);
         }else if(activity.isRadioButtonFlpLowPower()) {
-            locationTyep = activity.getResources().getString(R.string.locationFlpLowPower);
+            locationPriority = activity.getResources().getString(R.string.locationFlpLowPower);
+        } else if(activity.isRadioButtonFlpNoPower()) {
+            locationPriority = activity.getResources().getString(R.string.locationFlpNoPower);
         }
-        else if(activity.isRadioButtonFlpNoPower()) {
-            locationTyep = activity.getResources().getString(R.string.locationFlpNoPower);
-        }
+        settingusecase.setLocationPriority(locationPriority);
+
         settingusecase.setIsSetInterval(activity.isSetInterval());
         settingusecase.setSetInteravl(activity.getSetInterval());
         settingusecase.setCount(activity.getCount());

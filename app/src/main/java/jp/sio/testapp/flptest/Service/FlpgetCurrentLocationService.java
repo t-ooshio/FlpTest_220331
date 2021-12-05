@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.widget.Switch;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -57,7 +58,8 @@ public class FlpgetCurrentLocationService extends Service implements
     private IntervalTimerTask intervalTimerTask;
 
     //設定値の格納用変数
-    private final String locationType = "FlpBalancedPowerAccuracy";
+    private String settingLocationPriority;
+    private int locationPriority;
     private boolean settingIsSetInterval;
     private int settingSetInterval;
     private int settingCount;   // 0の場合は無制限に測位を続ける
@@ -175,11 +177,12 @@ public class FlpgetCurrentLocationService extends Service implements
         //画面が消灯しないようにPowerManagerを使用
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         //PowerManagerの画面つけっぱなし設定SCREEN_BRIGHT_WAKE_LOCK、非推奨の設定値だが試験アプリ的にはあったほうがいいので使用
-        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getString(R.string.locationFlpBalancedPowerAccuracy));
+        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getString(R.string.api_requestLocationUpdates));
         wakeLock.acquire();
 
         //設定値の取得
         // *1000は sec → msec の変換
+        settingLocationPriority = intent.getStringExtra(getBaseContext().getString(R.string.settingLocationPriority));
         settingIsSetInterval = intent.getBooleanExtra(getBaseContext().getString(R.string.settingIsSetInterval),false);
         settingSetInterval = intent.getIntExtra(getBaseContext().getString(R.string.settingSetInterval),0) * 1000;
         settingCount = intent.getIntExtra(getBaseContext().getString(R.string.settingCount), 0);
@@ -192,13 +195,29 @@ public class FlpgetCurrentLocationService extends Service implements
         successCount = 0;
         failCount = 0;
 
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         //fusedLocationProviderClient = LocationServices.FusedLocationApi;
         fusedLocationProviderClient = new FusedLocationProviderClient(this);
         locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        switch(settingLocationPriority){
+            case "BalancedPowerAccuracy":
+                locationPriority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
+                break;
+            case "HighAccuracy":
+                locationPriority = LocationRequest.PRIORITY_HIGH_ACCURACY;
+                break;
+            case "LowPower":
+                locationPriority = LocationRequest.PRIORITY_LOW_POWER;
+                break;
+            case "NoPower":
+                locationPriority = LocationRequest.PRIORITY_NO_POWER;
+                break;
+            default:
+                locationPriority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
+        }
+        locationRequest.setPriority(locationPriority);
 
         if(!mGoogleApiClient.isConnected()){
             mGoogleApiClient.connect();
@@ -225,11 +244,11 @@ public class FlpgetCurrentLocationService extends Service implements
         //MyLocationUsecaseで起動時にPermissionCheckを行っているのでここでは行わない
         CancellationToken cts = null;
         try{
-            fusedLocationProviderClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY,cts);
+            fusedLocationProviderClient.getCurrentLocation(locationPriority,cts);
         }catch (SecurityException e){
             e.printStackTrace();
         }
-        L.d("requestLocationUpdates");
+        L.d("requestCurrentLocation");
 
         //測位停止Timerの設定
         L.d("SetStopTimer");
@@ -448,7 +467,7 @@ public class FlpgetCurrentLocationService extends Service implements
      */
     protected void sendLocationBroadCast(Boolean fix, Location location, long locationStartTime, long locationStopTime) {
         L.d("sendLocation");
-        Intent broadcastIntent = new Intent(getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
+        Intent broadcastIntent = new Intent(getResources().getString(R.string.api_getCurrentLocation));
         broadcastIntent.putExtra(getResources().getString(R.string.category), getResources().getString(R.string.categoryLocation));
         broadcastIntent.putExtra(getResources().getString(R.string.TagisFix), fix);
         broadcastIntent.putExtra(getResources().getString(R.string.TagLocation), location);
@@ -467,7 +486,7 @@ public class FlpgetCurrentLocationService extends Service implements
      * @param category
      */
     protected void sendColdBroadCast(String category){
-        Intent broadcastIntent = new Intent(getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
+        Intent broadcastIntent = new Intent(getResources().getString(R.string.api_getCurrentLocation));
 
         if(category.equals(getResources().getString(R.string.categoryColdStart))){
             L.d("ColdStart");
@@ -483,7 +502,7 @@ public class FlpgetCurrentLocationService extends Service implements
      * Serviceを破棄することを通知するBroadcast
      */
     protected void sendServiceEndBroadCast(){
-        Intent broadcastIntent = new Intent(getResources().getString(R.string.locationFlpBalancedPowerAccuracy));
+        Intent broadcastIntent = new Intent(getResources().getString(R.string.api_getCurrentLocation));
         broadcastIntent.putExtra(getResources().getString(R.string.category),getResources().getString(R.string.categoryServiceEnd));
         sendBroadcast(broadcastIntent);
     }

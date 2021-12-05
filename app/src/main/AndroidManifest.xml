@@ -23,9 +23,7 @@
             android:screenOrientation="portrait">
         </activity>
         <service android:name=".Service.FlpRequestLocationUpdates"></service>
-        <service android:name=".Service.FlpHighAccuracyService"></service>
-        <service android:name=".Service.FlpLowPowerService"></service>
-        <service android:name=".Service.FlpNoPowerService"></service>
+        <service android:name=".Service.FlpgetCurrentLocationService"></service>
 
     </application>
 
