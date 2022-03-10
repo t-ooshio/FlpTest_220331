@@ -119,6 +119,7 @@ public class FlptestPresenter {
 
     public void locationStart(){
         IntentFilter filter = null;
+        activity.showTextViewResult("");
         getSetting();
         //ログファイルの生成
         locationLog = new LocationLog(activity);
@@ -130,7 +131,7 @@ public class FlptestPresenter {
                         + delassisttime + "," + isCold);
         locationLog.writeLog(locationHeader);
 
-        activity.showTextViewSetting("測位API:" + locationApi + "測位精度:" + locationPriority + "\n" + "測位回数:" + count + "\n" + "タイムアウト:" + timeout + "\n" +
+        activity.showTextViewSetting("測位API:" + locationApi + "\n" + "測位精度:" + locationPriority + "\n" + "測位回数:" + count + "\n" + "タイムアウト:" + timeout + "\n" +
                 "測位間隔:" + interval + "\n" + "Cold:" + isCold + "\n"
                 + "suplEndWaitTime:" + suplendwaittime + "\n" + "アシストデータ削除時間:" + delassisttime + "\n");
 

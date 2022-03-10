@@ -56,8 +56,8 @@ public class FlpRequestLocationUpdates extends Service implements
     private IntervalTimerTask intervalTimerTask;
 
     //設定値の格納用変数
-    private final String locationApi = "requestLocationUpdates";
-    private String locationPriority;
+    private String settingLocationPriority;
+    private int locationPriority;
     private boolean settingIsSetInterval;
     private int settingSetInterval;
     private int settingCount;   // 0の場合は無制限に測位を続ける
@@ -180,7 +180,7 @@ public class FlpRequestLocationUpdates extends Service implements
 
         //設定値の取得
         // *1000は sec → msec の変換
-
+        settingLocationPriority = intent.getStringExtra(getBaseContext().getString(R.string.settingLocationPriority));
         settingIsSetInterval = intent.getBooleanExtra(getBaseContext().getString(R.string.settingIsSetInterval),false);
         settingSetInterval = intent.getIntExtra(getBaseContext().getString(R.string.settingSetInterval),0) * 1000;
         settingCount = intent.getIntExtra(getBaseContext().getString(R.string.settingCount), 0);
@@ -199,7 +199,25 @@ public class FlpRequestLocationUpdates extends Service implements
         //fusedLocationProviderClient = LocationServices.FusedLocationApi;
         fusedLocationProviderClient = new FusedLocationProviderClient(this);
         locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest = LocationRequest.create();
+
+        switch(settingLocationPriority){
+            case "BalancedPowerAccuracy":
+                locationPriority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
+                break;
+            case "HighAccuracy":
+                locationPriority = LocationRequest.PRIORITY_HIGH_ACCURACY;
+                break;
+            case "LowPower":
+                locationPriority = LocationRequest.PRIORITY_LOW_POWER;
+                break;
+            case "NoPower":
+                locationPriority = LocationRequest.PRIORITY_NO_POWER;
+                break;
+            default:
+                locationPriority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
+        }
+        locationRequest.setPriority(locationPriority);
 
         if(!mGoogleApiClient.isConnected()){
             mGoogleApiClient.connect();
