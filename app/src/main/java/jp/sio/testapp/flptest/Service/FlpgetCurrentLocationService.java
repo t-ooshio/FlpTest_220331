@@ -13,6 +13,8 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.widget.Switch;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -21,10 +23,15 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.CancellationToken;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnTokenCanceledListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import jp.sio.testapp.flptest.L;
 import jp.sio.testapp.flptest.R;
@@ -243,18 +250,34 @@ public class FlpgetCurrentLocationService extends Service implements
         locationStartTime = System.currentTimeMillis();
         //MyLocationUsecaseで起動時にPermissionCheckを行っているのでここでは行わない
         CancellationToken cts = null;
+
+        final Executor executor = Executors.newSingleThreadExecutor();
         try{
-            fusedLocationProviderClient.getCurrentLocation(locationPriority,cts);
+            //測位停止Timerの設定
+            L.d("SetStopTimer");
+            stopTimerTask = new StopTimerTask();
+            stopTimer = new Timer(true);
+            stopTimer.schedule(stopTimerTask,settingTimeout);
+
+            fusedLocationProviderClient.getCurrentLocation(locationPriority,cts).addOnCompleteListener(
+                    executor, new OnCompleteListener<Location>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Location> task) {
+                            if(task.isSuccessful() && task.getResult() != null){
+                                L.d("CompleteListener Successful");
+                                locationSuccess(task.getResult());
+                            }else{
+                                L.d("CompleteListener Failed");
+                                locationFailed();
+
+                            }
+                        }
+                    }
+            );
+
         }catch (SecurityException e){
             e.printStackTrace();
         }
-        L.d("requestCurrentLocation");
-
-        //測位停止Timerの設定
-        L.d("SetStopTimer");
-        stopTimerTask = new StopTimerTask();
-        stopTimer = new Timer(true);
-        stopTimer.schedule(stopTimerTask,settingTimeout);
     }
     /**
      * 測位成功の場合の処理
@@ -288,14 +311,11 @@ public class FlpgetCurrentLocationService extends Service implements
             L.d(e.getMessage());
             e.printStackTrace();
         }
-        if(fusedLocationProviderClient != null) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-        }
         deleteLocationCallback();
 
         //測位回数が設定値に到達しているかチェック
         if (runningCount == settingCount && settingCount != 0) {
-            serviceStop();
+            this.serviceStop();
         } else {
             //回数満了してなければ測位間隔Timerを設定して次の測位の準備
             L.d("SuccessのIntervalTimer");
@@ -316,14 +336,16 @@ public class FlpgetCurrentLocationService extends Service implements
      */
     public void locationFailed() {
         L.d("locationFailed");
+        //completeListenerから測位失敗した場合にTimerをcancelする
+        if (stopTimer != null) {
+            stopTimer.cancel();
+            stopTimer = null;
+        }
         //測位終了の時間を取得
         locationStopTime = System.currentTimeMillis();
         runningCount++;
         failCount++;
         isLocationFix = false;
-        if(fusedLocationProviderClient != null) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-        }
         deleteLocationCallback();
 
         ttff = (double) (locationStopTime - locationStartTime) / 1000;
@@ -341,8 +363,8 @@ public class FlpgetCurrentLocationService extends Service implements
             }
         });
         //測位回数が設定値に到達しているかチェック
-        if (settingCount == runningCount && settingCount != 0) {
-            serviceStop();
+        if ((settingCount == runningCount) && (settingCount != 0)) {
+            this.serviceStop();
         } else {
             L.d("FailedのIntervalTimer");
             //回数満了してなければ測位間隔Timerを設定して次の測位の準備
@@ -381,7 +403,7 @@ public class FlpgetCurrentLocationService extends Service implements
         if (powerManager != null) {
             powerManager = null;
         }
-        stopSelf();
+        this.stopSelf();
     }
 
     /*
@@ -434,6 +456,7 @@ public class FlpgetCurrentLocationService extends Service implements
                 public void run() {
                     L.d("StopTimerTask");
                     locationFailed();
+
                 }
             });
         }
